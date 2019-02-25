@@ -1,6 +1,6 @@
 <?php
 /**
-* @developer Muhammad Khalil
+* @developer Junaid Ahmed
 * @purpose A helper to make customized log file for debug the errors.
 * @developedOn March 2015
 */
