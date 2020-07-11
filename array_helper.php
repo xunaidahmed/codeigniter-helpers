@@ -19,6 +19,32 @@
  * Output: [['id' => 1, 'name' => 'Jan', 'status' => 1]]
  *
  */
+
+function array_tree_build($elements, $parent_id = 0 )
+{
+    $childs = array();
+
+    if( count($elements) )
+    {
+        foreach($elements as $item)
+        {
+            $childs[$item->parent_id][] = $item;
+
+            foreach($elements as $item)
+            {
+                if (isset($childs[$item->id]))
+                {
+                    $item->childs = $childs[$item->id];
+                }
+            }
+        }
+
+        $childs = $childs[0];
+    }
+
+    return $childs;
+}
+
 function array_change_key( $arr, $old_key, $new_key )
 {
     $old_key = is_array($old_key) ? $old_key : [$old_key];
@@ -41,6 +67,65 @@ function array_change_key( $arr, $old_key, $new_key )
 
     return $arr;
 }
+
+/**
+ * Array Remove Associative Index
+ * ************************* ** * *
+ * Desc:
+ *
+ * Suppose: [['id' => 1, 'title' => 'Jan', 'active' => 1]]
+ * call:
+ * Output:
+ *
+ */
+function array_remove_index_assoc( $arr )
+{
+    if(count($arr))
+    {
+        $_tmp = [];
+
+        foreach( $arr as $v )
+        {
+            foreach($v as $t){
+                $_tmp[] = $t;
+            }
+        }
+
+        return $_tmp;
+    }
+
+    return $arr;
+}
+
+/**
+ * Array Collapse
+ * ****************************************************************************************************
+ * Desc: The array_collapse function collapses an array of arrays into a single array
+ *
+ * @param  array  $array
+ * @return array
+ *
+ * Suppose: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+ * call: array_collapse([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+ * Output: // [1, 2, 3, 4, 5, 6, 7, 8, 9]
+ *
+ */
+function array_collapse( $array ): array
+{
+    $results = [];
+
+    foreach ($array as $arr)
+    {
+        if ( !is_array($arr)) {
+            continue;
+        }
+
+        $results = array_merge($results, $arr);
+    }
+
+    return $results;
+}
+
 
 /**
  * Array Recursive Count
@@ -199,6 +284,32 @@ function array_add( $array, $ext = '.', $is_unique = TRUE )
     return $_temp;
 }
 
+ function clean_HTML_tags($str)
+{
+    if (is_array($str))
+    {
+        $new_array = array();
+        foreach ($str as $key => $val)
+        {
+            $new_array[$this->_clean_input_keys($key)] = $this->_clean_input_data($val);
+        }
+        return $new_array;
+    }
+
+// We strip slashes if magic quotes is on to keep things consistent
+    if (get_magic_quotes_gpc())
+    {
+        $str = stripslashes($str);
+    }
+
+// Standardize newlines
+    if (strpos($str, "\r") !== FALSE)
+    {
+        $str = str_replace(array("\r\n", "\r"), "\n", $str);
+    }
+
+    return $str;
+}
 /**
  * Array Sum Total
  * *************************
@@ -252,6 +363,57 @@ function array_get( $array, $field )
 }
 
 /**
+ * Array Get
+ * *************************
+ * Desc: The array_get function retrieves a value from a deeply nested array
+ *
+ * Suppose: [['id' => 1, 'title' => 'Jan'], 'id' => 2, 'title' => 'Feb']]
+ * call: array_get( exists_arr, 'id');
+ * Output: [1, 2]
+ *
+ */
+function array_only_get( $array, $key, $select = null )
+{
+    $_temp = [];
+
+    if( isset($array) && count($array) )
+    {
+        //Fetch Root Array
+        if( !$select )
+        {
+            return array_get($array, $key);
+        }
+
+        foreach ($array as $k1 => $v1)
+        {
+            if( isset($v1[$key]) )
+            {
+                if( is_array($v1[$key]) ) {
+                    return array_get($v1[$key], $select);
+                }
+
+                return $v1[$key];
+            }
+            else
+            {
+                if( is_array($v1) )
+                {
+                    foreach($v1 as $kky => $iv)
+                    {
+                        if( is_array($iv) )
+                        {
+                            return array_only_get($v1, $key, $select);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return $_temp;
+}
+
+/**
  * Array Only
  * *************************
  * Desc: The array_pluck function retrieves all of the values for a given key from an array:
@@ -261,9 +423,23 @@ function array_get( $array, $field )
  * Output: ['name' => 'Desk']
  *
  */
-function array_only()
+function array_only( $array, $except )
 {
+    if( count($array) )
+    {
+        $excepts = (is_array($except) ? $except : [$except]);
 
+        if( count($excepts) )
+        {
+            foreach ($excepts as $key)
+            {
+                $key = array_search($key, $array);
+                unset($array[$key]);
+            }
+        }
+    }
+    
+    return $array;
 }
 
 /**
